@@ -5,6 +5,7 @@ from ObjectClasses.SceneShape import SceneShape
 def getAllSceneShapes(sim, estimatedSceneShapes=1000):
     i = 0
     sceneObjects = []
+    outputFile = open("EnvironmentObstacles/Obstacles.txt", "w")
 
     while i < estimatedSceneShapes:
         objectHandle = sim.getObjects(i, sim.object_shape_type)
@@ -19,7 +20,26 @@ def getAllSceneShapes(sim, estimatedSceneShapes=1000):
                                      shape.pixelCoordinates.drawY2,
                                      shape.shapeBoundingBoxWidth,
                                      shape.shapeBoundingBoxHeight))
+
+                outputFile.write(str(round(shape.pixelCoordinates.drawX1, 7)) + " " +
+                                 str(round(shape.pixelCoordinates.drawY2, 7)) + " " +
+                                 str(round(shape.shapeBoundingBoxWidth, 7)) + " " +
+                                 str(round(shape.shapeBoundingBoxHeight, 7)) + "\n")
         else:
             break
         i += 1
     return sceneObjects
+
+
+def readSceneObjectsFromFile():
+    objFile = open("EnvironmentObstacles/Obstacles.txt", "r")
+    objList = []
+
+    for line in objFile:
+        line = line.replace("\n", "")
+        dimensions = line.split(" ")
+        objList.append((float(dimensions[0]),
+                        float(dimensions[1]),
+                        float(dimensions[2]),
+                        float(dimensions[3])))
+    return objList

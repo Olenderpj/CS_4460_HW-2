@@ -26,7 +26,7 @@ class RRT():
     """
 
     def __init__(self, start, goal, obstacleList,
-                 randArea, expandDis=15, goalSampleRate=10, maxIter=1500):
+                 randArea, expandDis=RRT_NODE_SPACING, goalSampleRate=10, maxIter=1500):
 
         self.start = Node(start[0], start[1])
         self.end = Node(goal[0], goal[1])
@@ -286,7 +286,13 @@ def planRRTStarPath(simulation):
     print("start RRT path planning")
 
     # ====Search Path with RRT====
-    obstacleList = getAllSceneShapes(simulation) # [x,y,size]
+
+    if OBJECT_TEXT_FILE_FLAG == 0:
+        obstacleList = getAllSceneShapes(simulation) # [x,y,size]
+    else:
+        obstacleList = readSceneObjectsFromFile()
+
+    print(obstacleList)
     # Set Initial parameters
     rrt = RRT(start=[250, 100], goal=[250, 499],
               randArea=[XDIM, YDIM], obstacleList=obstacleList)
