@@ -1,8 +1,6 @@
 import random
 import math
-import sys
 import pygame
-import timeit, time
 import numpy as np
 from Utilities.SimulationUtils import *
 from Constants.EnvironmentConstants import *
@@ -17,12 +15,12 @@ pygame.init()
 fpsClock = pygame.time.Clock()
 
 screen = pygame.display.set_mode(windowSize)
-pygame.display.set_caption('Performing RRT')
+pygame.display.set_caption('RRT* Path Planning')
 
 
 class RRT():
     """
-    Class for RRT Planning
+    Class for RRT* Path Planning
     """
 
     def __init__(self, start, goal, obstacleList,
@@ -38,10 +36,6 @@ class RRT():
         self.obstacleList = obstacleList
 
     def Planning(self, animation=True):
-        """
-        Pathplanning
-        animation: flag for animation on or off
-        """
         self.nodeList = {0: self.start}
         i = 0
 
@@ -73,7 +67,6 @@ class RRT():
                         ind = leaves[random.randint(0, len(leaves) - 1)]
                         self.nodeList[self.nodeList[ind].parent].children.discard(ind)
                         self.nodeList.pop(ind)
-
             i += 1
 
             if animation and i % 25 == 0:
@@ -82,7 +75,8 @@ class RRT():
             for e in pygame.event.get():
                 if e.type == pygame.MOUSEBUTTONDOWN:
                     if e.button == 1:
-                        self.obstacleList.append((e.pos[0], e.pos[1], 30, 30))
+                        self.start.x = e.pos[0]
+                        self.start.y = e.pos[1]
                         self.path_validation()
                     elif e.button == 3:
                         self.end.x = e.pos[0]
@@ -157,8 +151,8 @@ class RRT():
 
     def get_best_last_index(self):
 
-        disglist = [(key, self.calc_dist_to_goal(node.x, node.y)) for key, node in self.nodeList.items()]
-        goalinds = [key for key, distance in disglist if distance <= self.expandDis]
+        distanceToGoalList = [(key, self.calc_dist_to_goal(node.x, node.y)) for key, node in self.nodeList.items()]
+        goalinds = [key for key, distance in distanceToGoalList if distance <= self.expandDis]
 
         if len(goalinds) == 0:
             return None
@@ -170,12 +164,12 @@ class RRT():
 
         return None
 
-    def gen_final_course(self, goalind):
+    def gen_final_course(self, goalIndex):
         path = [[self.end.x, self.end.y]]
-        while self.nodeList[goalind].parent is not None:
-            node = self.nodeList[goalind]
+        while self.nodeList[goalIndex].parent is not None:
+            node = self.nodeList[goalIndex]
             path.append([node.x, node.y])
-            goalind = node.parent
+            goalIndex = node.parent
         path.append([self.start.x, self.start.y])
         return path
 
@@ -225,24 +219,25 @@ class RRT():
         return True
 
     def DrawGraph(self, rnd=None):
-        u"""
-        Draw Graph
-        """
+
+        # Fill the background with white
         screen.fill((255, 255, 255))
         for node in self.nodeList.values():
             if node.parent is not None:
                 pygame.draw.line(screen, (192, 192, 192), [self.nodeList[node.parent].x, self.nodeList[node.parent].y],
                                  [node.x, node.y])
 
+        # Draw a circle at all child nodes
         for node in self.nodeList.values():
             if len(node.children) == 0:
                 pygame.draw.circle(screen, (255, 204, 153), [int(node.x), int(node.y)], 2)
 
-        for (sx, sy, ex, ey) in self.obstacleList:
-            pygame.draw.rect(screen, (0, 0, 0), [(sx, sy), (ex, ey)])
+        # Draw all rectangle objects
+        for (rectangleX, rectangleY, width, height) in self.obstacleList:
+            pygame.draw.rect(screen, (0, 0, 0), [(rectangleX, rectangleY), (width, height)])
 
-        pygame.draw.circle(screen, (255, 0, 0), [self.start.x, self.start.y], 10)
-        pygame.draw.circle(screen, (0, 0, 255), [self.end.x, self.end.y], 10)
+        pygame.draw.circle(screen, (0, 255, 0), [self.start.x, self.start.y], 10)
+        pygame.draw.circle(screen, (255, 0, 0), [self.end.x, self.end.y], 10)
 
         lastIndex = self.get_best_last_index()
         if lastIndex is not None:
@@ -261,12 +256,13 @@ class RRT():
         minind = list(self.nodeList.keys())[np.argmin(dlist)]
         return minind
 
+    # Evaulate all nodes against the obstacles and determine if it collides with an obstacle
     def __CollisionCheck(self, node, obstacleList):
 
-        for (sx, sy, ex, ey) in obstacleList:
-            sx, sy, ex, ey = sx + 2, sy + 2, ex + 2, ey + 2
-            if node.x > sx and node.x < sx + ex:
-                if node.y > sy and node.y < sy + ey:
+        for (rectangleX, rectangleY, width, height) in obstacleList:
+            rectangleX, rectangleY, width, height = rectangleX + 2, rectangleY + 2, width + 2, height + 2
+            if node.x > rectangleX and node.x < rectangleX + width:
+                if node.y > rectangleY and node.y < rectangleY + height:
                     return False
 
         return True  # safe
@@ -294,7 +290,20 @@ def planRRTStarPath(simulation):
 
     print(obstacleList)
     # Set Initial parameters
-    rrt = RRT(start=[250, 100], goal=[250, 499],
-              randArea=[XDIM, YDIM], obstacleList=obstacleList)
-    path = rrt.Planning(animation=show_animation)
+    if COURSE_FLAG == 0:
+        if MAZE_START_FLAG == 1:
+            rrt = RRT(start=[MAZE_START_X1, MAZE_START_Y1], goal=[MAZE_END_X, MAZE_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
+        elif MAZE_START_FLAG == 2:
+            rrt = RRT(start=[MAZE_START_X2, MAZE_START_Y2], goal=[MAZE_END_X, MAZE_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
+        elif MAZE_START_FLAG == 3:
+            rrt = RRT(start=[MAZE_START_X3, MAZE_START_Y3], goal=[MAZE_END_X, MAZE_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
+    elif COURSE_FLAG == 1:
+        if OC_START_FLAG == 1:
+            rrt = RRT(start=[OC_START_X1, OC_START_Y1], goal=[OC_END_X, OC_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
+        elif OC_START_FLAG == 2:
+            rrt = RRT(start=[OC_START_X2, OC_START_Y2], goal=[OC_END_X, OC_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
+        elif OC_START_FLAG == 3:
+            rrt = RRT(start=[OC_START_X3, OC_START_Y3], goal=[OC_END_X, OC_END_Y], randArea=[XDIM, YDIM], obstacleList=obstacleList)
 
+    path = rrt.Planning(animation=show_animation)
+    print(path)

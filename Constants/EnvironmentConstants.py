@@ -12,4 +12,43 @@ OBJECT_BUFFER = 10
 #   0 creates new scene objects to the file
 #   1 uses existing objects in the file
 OBJECT_TEXT_FILE_FLAG = 1
-RRT_NODE_SPACING = 5.0
+RRT_NODE_SPACING = 7.5
+
+#Starts from the upper right hand corner
+
+# Course flag determines whether the maze or the obstacle course will be executed
+# 0 - maze
+# 1 - Obstacle Course
+COURSE_FLAG = 0
+# Start flag determines what set of x*, y* pairs to use.
+MAZE_START_FLAG = 3
+OC_START_FLAG = 3
+
+# -------------------------
+
+MAZE_START_X1 = 665
+MAZE_START_Y1 = 475
+
+MAZE_START_X2 = 504
+MAZE_START_Y2 = 685
+
+MAZE_START_X3 = 685
+MAZE_START_Y3 = 752
+
+MAZE_END_X = 460
+MAZE_END_Y = 210
+
+# -------------------------
+# Obstacle course coordinates
+
+OC_START_X1 = 485
+OC_START_Y1 = 210
+
+OC_START_X2 = 135
+OC_START_Y2 = 130
+
+OC_START_X3 = 200
+OC_START_Y3 = 370
+
+OC_END_X = 300
+OC_END_Y = 485
